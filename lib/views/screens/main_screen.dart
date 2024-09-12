@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:fox_training/controller/getxController/auth_controller.dart';
 import 'package:fox_training/controller/utils/screen_percentage.dart';
 import 'package:fox_training/controller/utils/colors_resources.dart';
 import 'package:fox_training/controller/utils/dimentions_resources.dart';
@@ -12,24 +13,37 @@ import 'package:fox_training/views/widgets/custom_button.dart';
 import 'package:get/get.dart';
 
 // ignore: must_be_immutable
-class MainScreen extends StatelessWidget {
+class MainScreen extends StatefulWidget {
   String userName;
 
   MainScreen({super.key, required this.userName});
 
+  @override
+  State<MainScreen> createState() => _MainScreenState();
+}
+
+class _MainScreenState extends State<MainScreen> {
   List<String> titleText = ['Set', 'Previous', 'Lbs', 'Reps'];
+
   RxList<String> sets = [
     '1',
   ].obs;
-  RxList<TextEditingController> lbsControllers = [TextEditingController()].obs;
 
-  RxList<TextEditingController> repsController = [TextEditingController()].obs;
+  RxList<TextEditingController> repsController = <TextEditingController>[].obs;
+
   final RxString _selectedDifficulty = 'Level 1'.obs;
+
   // TextEditingController lbsController = TextEditingController();
-  // TextEditingController repsController = TextEditingController();
+  late AuthControllers authControllers;
+  @override
+  void initState() {
+    authControllers = Get.put(AuthControllers(context: context));
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
+    print('data == ${authControllers.lbsControllers[0].text}');
     SystemChrome.setSystemUIOverlayStyle(
         SystemUiOverlayStyle(statusBarColor: ColorsResources.WHITE_COLOR));
     Size mediaQuerySize = MediaQuery.of(context).size;
@@ -89,11 +103,11 @@ class MainScreen extends StatelessWidget {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    userName.contains('1')
+                                    widget.userName.contains('1')
                                         ? exerciseTitle[0]
-                                        : userName.contains('2')
+                                        : widget.userName.contains('2')
                                             ? exerciseTitle[1]
-                                            : userName.contains('3')
+                                            : widget.userName.contains('3')
                                                 ? exerciseTitle[2]
                                                 : exerciseTitle[03],
                                     style:
@@ -107,11 +121,11 @@ class MainScreen extends StatelessWidget {
                                         ScreenPercentage.SCREEN_SIZE_1.h,
                                   ),
                                   Text(
-                                    userName.contains('1')
+                                    widget.userName.contains('1')
                                         ? exerciseType[0]
-                                        : userName.contains('2')
+                                        : widget.userName.contains('2')
                                             ? exerciseType[1]
-                                            : userName.contains('3')
+                                            : widget.userName.contains('3')
                                                 ? exerciseType[2]
                                                 : exerciseType[03],
                                     style:
@@ -192,7 +206,7 @@ class MainScreen extends StatelessWidget {
                                   ),
                                   Column(
                                     children: List.generate(
-                                        sets.length,
+                                        authControllers.lbsControllers.length,
                                         (index) => Row(
                                               mainAxisAlignment:
                                                   MainAxisAlignment
@@ -205,7 +219,7 @@ class MainScreen extends StatelessWidget {
                                                               DimensionsResource
                                                                   .D_9),
                                                   child: Text(
-                                                    sets[index],
+                                                    ' ${index + 1}',
                                                     style: CustomTextStyles
                                                         .contentRegularTextStyle(
                                                             ColorsResources
@@ -226,8 +240,9 @@ class MainScreen extends StatelessWidget {
                                                         left: DimensionsResource
                                                             .D_10.sp),
                                                     child: CommonCircleAvatar(
-                                                      controller:
-                                                          lbsControllers[index],
+                                                      controller: authControllers
+                                                              .lbsControllers[
+                                                          index],
                                                     )),
                                                 Padding(
                                                   padding: const EdgeInsets
@@ -237,8 +252,8 @@ class MainScreen extends StatelessWidget {
                                                       right: DimensionsResource
                                                           .D_0),
                                                   child: CommonCircleAvatar(
-                                                    controller:
-                                                        repsController[index],
+                                                    controller: authControllers
+                                                        .repsController[index],
                                                   ),
                                                 )
                                               ],
@@ -249,12 +264,16 @@ class MainScreen extends StatelessWidget {
                                   ),
                                   GestureDetector(
                                     onTap: () {
-                                      int newValue = int.parse(sets.last) + 1;
-                                      sets.add(newValue.toString());
-                                      lbsControllers
+                                      authControllers.lbsControllers
                                           .add(TextEditingController());
-                                      repsController
+                                      authControllers.repsController
                                           .add(TextEditingController());
+                                      // int newValue = int.parse(sets.last) + 1;
+                                      // sets.add(newValue.toString());
+                                      // lbsControllers
+                                      //     .add(TextEditingController());
+                                      // repsController
+                                      //     .add(TextEditingController());
                                     },
                                     child: Container(
                                       width: mediaQuerySize.width,
@@ -379,12 +398,14 @@ class MainScreen extends StatelessWidget {
   List<String> reps = [
     '10',
   ];
+
   List<String> exerciseTitle = [
     'Station 1',
     'Station 2',
     'Station 3',
     'Station 4'
   ];
+
   List<String> exerciseType = [
     'Squat(Barbell)',
     'Leg Extention(Machine)',
