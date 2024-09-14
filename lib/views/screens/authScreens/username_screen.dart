@@ -44,6 +44,7 @@ class UsernameScreen extends StatelessWidget {
                     SizedBox(
                       width: mediaQuerySize.width * 0.7.w,
                       child: CustomTextFormField(
+                        maxLine: 1,
                         validator: (value) {
                           if (value!.isEmpty) {
                             return 'please fill this field';
@@ -61,18 +62,21 @@ class UsernameScreen extends StatelessWidget {
                       height: mediaQuerySize.height *
                           ScreenPercentage.SCREEN_SIZE_2.h,
                     ),
-                    MyButton(
-                      text: 'Next',
-                      onTap: () {
-                        if (form.currentState!.validate()) {
-                          authControllers.loginToAccount(
-                              userName: userNameController.text);
-                          // Get.to(() => MainScreen(
-                          //       userName: userNameController.text,
-                          //     ));
-                        }
-                      },
-                    )
+                    Obx(() {
+                      return MyButton(
+                        isLoading: authControllers.isLoading.value,
+                        text: 'Next',
+                        onTap: () {
+                          if (form.currentState!.validate()) {
+                            authControllers.loginToAccount(
+                                userName: userNameController.text);
+                            // Get.to(() => MainScreen(
+                            //       userName: userNameController.text,
+                            //     ));
+                          }
+                        },
+                      );
+                    })
                   ],
                 ),
               ),

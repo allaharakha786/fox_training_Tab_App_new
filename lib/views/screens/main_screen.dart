@@ -1,22 +1,32 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:fox_training/controller/apis/auth_apis.dart';
 import 'package:fox_training/controller/getxController/auth_controller.dart';
+import 'package:fox_training/controller/utils/constants.dart';
 import 'package:fox_training/controller/utils/screen_percentage.dart';
 import 'package:fox_training/controller/utils/colors_resources.dart';
 import 'package:fox_training/controller/utils/dimentions_resources.dart';
+import 'package:fox_training/models/user_workout_model.dart';
 import 'package:fox_training/views/screens/authScreens/username_screen.dart';
 import 'package:fox_training/views/utills/text_styles.dart';
 import 'package:fox_training/views/widgets/common_circle_avatar.dart';
 import 'package:fox_training/views/widgets/custom_button.dart';
 import 'package:get/get.dart';
+import 'package:http/http.dart' as http;
+
+import '../../controller/utils/shared_preferences.dart';
+import '../utills/custom_widgets.dart';
+import 'authScreens/login_screen.dart';
 
 // ignore: must_be_immutable
 class MainScreen extends StatefulWidget {
-  String userName;
-
-  MainScreen({super.key, required this.userName});
+  MainScreen({
+    super.key,
+  });
 
   @override
   State<MainScreen> createState() => _MainScreenState();
@@ -25,11 +35,13 @@ class MainScreen extends StatefulWidget {
 class _MainScreenState extends State<MainScreen> {
   List<String> titleText = ['Set', 'Previous', 'Lbs', 'Reps'];
 
-  RxList<String> sets = [
-    '1',
-  ].obs;
+  RxList<Set> sets = <Set>[].obs;
 
-  RxList<TextEditingController> repsController = <TextEditingController>[].obs;
+  // RxList<String> sets = [
+  //   '1',
+  // ].obs;
+
+  // RxList<TextEditingController> repsController = <TextEditingController>[].obs;
 
   final RxString _selectedDifficulty = 'Level 1'.obs;
 
@@ -78,7 +90,7 @@ class _MainScreenState extends State<MainScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'WEEK 2',
+                          'Week ${authControllers.userWorkoutData.value.workout.weekNumber.toString()}',
                           style: CustomTextStyles.headingBoldTextStyle(
                               ColorsResources.PRIMARY_COLOR,
                               DimensionsResource.FONT_SIZE_MEDIUM),
@@ -103,13 +115,7 @@ class _MainScreenState extends State<MainScreen> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    widget.userName.contains('1')
-                                        ? exerciseTitle[0]
-                                        : widget.userName.contains('2')
-                                            ? exerciseTitle[1]
-                                            : widget.userName.contains('3')
-                                                ? exerciseTitle[2]
-                                                : exerciseTitle[03],
+                                    'Station ${authControllers.userWorkoutData.value.workout.station.stationNumber.toString()}',
                                     style:
                                         CustomTextStyles.headingBoldTextStyle(
                                             ColorsResources.BLACK_COLOR,
@@ -121,13 +127,8 @@ class _MainScreenState extends State<MainScreen> {
                                         ScreenPercentage.SCREEN_SIZE_1.h,
                                   ),
                                   Text(
-                                    widget.userName.contains('1')
-                                        ? exerciseType[0]
-                                        : widget.userName.contains('2')
-                                            ? exerciseType[1]
-                                            : widget.userName.contains('3')
-                                                ? exerciseType[2]
-                                                : exerciseType[03],
+                                    authControllers.userWorkoutData.value
+                                        .workout.station.exerciseName,
                                     style:
                                         CustomTextStyles.headingBoldTextStyle(
                                             ColorsResources.PRIMARY_COLOR,
@@ -228,13 +229,21 @@ class _MainScreenState extends State<MainScreen> {
                                                                 .FONT_SIZE_MEDIUM),
                                                   ),
                                                 ),
-                                                Padding(
-                                                  padding: EdgeInsets.only(
-                                                      left: DimensionsResource
-                                                          .D_20.sp),
-                                                  child: SvgPicture.asset(
-                                                      'assets/svg/horizantal_line.svg'),
-                                                ),
+
+                                                index == 0
+                                                    ? Text('0')
+                                                    : Text(authControllers
+                                                        .lbsControllers[
+                                                            index - 1]
+                                                        .text),
+
+                                                // Padding(
+                                                //   padding: EdgeInsets.only(
+                                                //       left: DimensionsResource
+                                                //           .D_20.sp),
+                                                //   child: SvgPicture.asset(
+                                                //       'assets/svg/horizantal_line.svg'),
+                                                // ),
                                                 Padding(
                                                     padding: EdgeInsets.only(
                                                         left: DimensionsResource
@@ -264,10 +273,10 @@ class _MainScreenState extends State<MainScreen> {
                                   ),
                                   GestureDetector(
                                     onTap: () {
-                                      authControllers.lbsControllers
-                                          .add(TextEditingController());
-                                      authControllers.repsController
-                                          .add(TextEditingController());
+                                      authControllers.lbsControllers.add(
+                                          TextEditingController(text: '1'));
+                                      authControllers.repsController.add(
+                                          TextEditingController(text: '1'));
                                       // int newValue = int.parse(sets.last) + 1;
                                       // sets.add(newValue.toString());
                                       // lbsControllers
@@ -275,49 +284,60 @@ class _MainScreenState extends State<MainScreen> {
                                       // repsController
                                       //     .add(TextEditingController());
                                     },
-                                    child: Container(
-                                      width: mediaQuerySize.width,
-                                      decoration: BoxDecoration(
-                                          borderRadius: BorderRadius.circular(
-                                              DimensionsResource.D_48),
-                                          color:
-                                              ColorsResources.BACKGROUND_COLOR),
-                                      child: Padding(
-                                        padding: const EdgeInsets.all(
-                                            DimensionsResource
-                                                .PADDING_SIZE_DEFAULT),
-                                        child: Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.center,
-                                          children: [
-                                            SizedBox(
-                                              height: mediaQuerySize.height *
-                                                  ScreenPercentage
-                                                      .SCREEN_SIZE_3.h,
-                                              width: mediaQuerySize.width *
-                                                  ScreenPercentage
-                                                      .SCREEN_SIZE_4.w,
-                                              child: SvgPicture.asset(
-                                                'assets/svg/plus_icon.svg',
+                                    child: authControllers.userWorkoutData.value
+                                                .workout.station.completed ==
+                                            true
+                                        ? SizedBox()
+                                        : Container(
+                                            width: mediaQuerySize.width,
+                                            decoration: BoxDecoration(
+                                                borderRadius:
+                                                    BorderRadius.circular(
+                                                        DimensionsResource
+                                                            .D_48),
+                                                color: ColorsResources
+                                                    .BACKGROUND_COLOR),
+                                            child: Padding(
+                                              padding: const EdgeInsets.all(
+                                                  DimensionsResource
+                                                      .PADDING_SIZE_DEFAULT),
+                                              child: Row(
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment.center,
+                                                children: [
+                                                  SizedBox(
+                                                    height:
+                                                        mediaQuerySize.height *
+                                                            ScreenPercentage
+                                                                .SCREEN_SIZE_3
+                                                                .h,
+                                                    width:
+                                                        mediaQuerySize.width *
+                                                            ScreenPercentage
+                                                                .SCREEN_SIZE_4
+                                                                .w,
+                                                    child: SvgPicture.asset(
+                                                      'assets/svg/plus_icon.svg',
+                                                    ),
+                                                  ),
+                                                  SizedBox(
+                                                    width:
+                                                        mediaQuerySize.width *
+                                                            0.01.w,
+                                                  ),
+                                                  Text(
+                                                    'Add Set',
+                                                    style: CustomTextStyles
+                                                        .contentRegularTextStyle(
+                                                            ColorsResources
+                                                                .BLACK_COLOR,
+                                                            DimensionsResource
+                                                                .FONT_SIZE_MEDIUM),
+                                                  )
+                                                ],
                                               ),
                                             ),
-                                            SizedBox(
-                                              width:
-                                                  mediaQuerySize.width * 0.01.w,
-                                            ),
-                                            Text(
-                                              'Add Set',
-                                              style: CustomTextStyles
-                                                  .contentRegularTextStyle(
-                                                      ColorsResources
-                                                          .BLACK_COLOR,
-                                                      DimensionsResource
-                                                          .FONT_SIZE_MEDIUM),
-                                            )
-                                          ],
-                                        ),
-                                      ),
-                                    ),
+                                          ),
                                   )
                                 ],
                               ),
@@ -381,9 +401,23 @@ class _MainScreenState extends State<MainScreen> {
                   ),
                   Center(
                       child: MyButton(
-                    text: 'Save Workout',
+                    color: authControllers.userWorkoutData.value.workout.station
+                                .completed ==
+                            true
+                        ? Colors.grey
+                        : ColorsResources.PRIMARY_COLOR,
+                    isLoading: authControllers.isLoading.value,
+                    text: authControllers.userWorkoutData.value.workout.station
+                                .completed ==
+                            true
+                        ? 'Go back'
+                        : 'Save Workout',
                     onTap: () {
-                      Get.to(() => UsernameScreen());
+                      authControllers.userWorkoutData.value.workout.station
+                                  .completed !=
+                              true
+                          ? createWorkoutModel()
+                          : Get.off(() => UsernameScreen());
                     },
                   ))
                 ],
@@ -412,4 +446,45 @@ class _MainScreenState extends State<MainScreen> {
     'Flat Leg Raise',
     'Leg Press'
   ];
+
+  void createWorkoutModel() async {
+    // Add sets from UI
+    for (int i = 0; i < authControllers.lbsControllers.length; i++) {
+      sets.add(Set(
+        previous: 0, // Default previous value
+        lbs: int.parse(authControllers.lbsControllers[i].text),
+        reps: int.parse(authControllers.repsController[i].text),
+        id: authControllers.userWorkoutData.value.workout.station.sets[0]
+            .id, // You can generate an ID or leave it blank
+      ));
+    }
+
+    // Create Station object
+    Station station = Station(
+      exerciseName:
+          authControllers.userWorkoutData.value.workout.station.exerciseName,
+      stationNumber:
+          authControllers.userWorkoutData.value.workout.station.stationNumber,
+      sets: sets,
+      id: authControllers
+          .userWorkoutData.value.workout.station.id, // Example ID
+    );
+
+    // Create Workout object
+    Workout workout = Workout(
+      station: station,
+      userId: authControllers
+          .userWorkoutData.value.workout.userId, // Replace with actual user ID
+      weekNumber: authControllers
+          .userWorkoutData.value.workout.weekNumber, // Example week number
+      programId: authControllers
+          .userWorkoutData.value.workout.programId, // Example program ID
+      workOutId: authControllers
+          .userWorkoutData.value.workout.workOutId, // Example workout ID
+    );
+
+    // saveWorkoutDataApi(workout: workout);
+    authControllers.saveWorkout(workout: workout);
+    // print(workout.toJson()); // You can now post this data to API
+  }
 }

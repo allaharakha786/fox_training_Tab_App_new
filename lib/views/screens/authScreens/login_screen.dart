@@ -51,6 +51,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     SizedBox(
                       width: mediaQuerySize.width * 0.7.w,
                       child: CustomTextFormField(
+                        maxLine: 1,
                         borderRadius: 30,
                         validator: (value) {
                           if (value!.isEmpty) {
@@ -72,6 +73,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     SizedBox(
                       width: mediaQuerySize.width * 0.7.w,
                       child: CustomTextFormField(
+                        maxLine: 1,
                         bgColor: Colors.black.withOpacity(0.04),
                         validator: (value) {
                           if (value!.isEmpty) {
@@ -89,16 +91,19 @@ class _LoginScreenState extends State<LoginScreen> {
                       height: mediaQuerySize.height *
                           ScreenPercentage.SCREEN_SIZE_3.h,
                     ),
-                    MyButton(
-                      text: 'Login',
-                      onTap: () {
-                        if (formKey.currentState!.validate()) {
-                          authControllers.loginToTab(
-                              tabId: tabIdController.text,
-                              password: passwordController.text);
-                        }
-                      },
-                    )
+                    Obx(() {
+                      return MyButton(
+                        isLoading: authControllers.isLoading.value,
+                        text: 'Login',
+                        onTap: () {
+                          if (formKey.currentState!.validate()) {
+                            authControllers.loginToTab(
+                                tabId: tabIdController.text,
+                                password: passwordController.text);
+                          }
+                        },
+                      );
+                    })
                   ],
                 ),
               ),

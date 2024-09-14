@@ -8,6 +8,7 @@ class AuthControllers extends GetxController {
   AuthControllers({required this.context});
   RxList<TextEditingController> lbsControllers = <TextEditingController>[].obs;
   RxList<TextEditingController> repsController = <TextEditingController>[].obs;
+  RxBool isLoading = false.obs;
 
   Rx<UserWorkoutModel> userWorkoutData = UserWorkoutModel(
           message: '',
@@ -21,7 +22,10 @@ class AuthControllers extends GetxController {
       .obs;
 
   loginToAccount({required String userName}) async {
-    var myData = await AuthAPis().loginToAccount(userName: userName);
+    isLoading.value = true;
+    lbsControllers.clear();
+    var myData =
+        await AuthAPis(context: context).loginToAccount(userName: userName);
     try {
       if (myData != null) {
         userWorkoutData.value = myData;
@@ -36,12 +40,17 @@ class AuthControllers extends GetxController {
               text: userWorkoutData.value.workout.station.sets[i].reps
                   .toString()));
         }
+        isLoading.value = false;
 
         print('Data retrived done');
       } else {
+        isLoading.value = false;
+
         print('data not retrived');
       }
     } catch (e) {
+      isLoading.value = false;
+
       print('data not retrived catch');
 
       print(e);
@@ -51,10 +60,30 @@ class AuthControllers extends GetxController {
   Future<void> loginToTab(
       {required String tabId, required String password}) async {
     try {
-      await AuthAPis().loginToTabApi(tabId: tabId, password: password);
+      isLoading.value = true;
+
+      await AuthAPis(context: context)
+          .loginToTabApi(tabId: tabId, password: password);
 
       print('login Sucessfully');
+      isLoading.value = false;
     } catch (e) {
+      isLoading.value = false;
+
+      print(e);
+    }
+  }
+
+  Future<void> saveWorkout({
+    required Workout workout,
+  }) async {
+    try {
+      isLoading.value = true;
+      await AuthAPis(context: context).saveWorkoutDataApi(workout: workout);
+      isLoading.value = false;
+    } catch (e) {
+      isLoading.value = false;
+
       print(e);
     }
   }

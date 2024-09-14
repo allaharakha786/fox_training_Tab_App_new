@@ -68,12 +68,14 @@ class Station {
   int stationNumber;
   List<Set> sets;
   String id;
+  bool? completed;
 
   Station({
     required this.exerciseName,
     required this.stationNumber,
     required this.sets,
     required this.id,
+    this.completed,
   });
 
   factory Station.fromJson(Map<String, dynamic> json) => Station(
@@ -81,6 +83,7 @@ class Station {
         stationNumber: json["stationNumber"],
         sets: List<Set>.from(json["sets"].map((x) => Set.fromJson(x))),
         id: json["_id"],
+        completed: json["completed"],
       );
 
   Map<String, dynamic> toJson() => {
@@ -88,6 +91,7 @@ class Station {
         "stationNumber": stationNumber,
         "sets": List<dynamic>.from(sets.map((x) => x.toJson())),
         "_id": id,
+        "completed": completed,
       };
 }
 

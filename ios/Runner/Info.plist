@@ -45,5 +45,26 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+
+	<!-- App Transport Security Settings -->
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<!-- Allow HTTP connections -->
+		<key>NSAllowsArbitraryLoads</key>
+		<true/>
+		<!-- Optionally specify exceptions for specific domains -->
+		<!--
+		<key>NSExceptionDomains</key>
+		<dict>
+			<key>example.com</key>
+			<dict>
+				<key>NSIncludesSubdomains</key>
+				<true/>
+				<key>NSTemporaryExceptionAllowsInsecureHTTPLoads</key>
+				<true/>
+			</dict>
+		</dict>
+		-->
+	</dict>
 </dict>
 </plist>
